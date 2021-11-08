@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/about.png</file>
+        <file>images/archive.png</file>
+        <file>images/calibrate.png</file>
+        <file>images/connect.png</file>
+        <file>images/start.png</file>
+        <file>images/stop.png</file>
+        <file>images/processing.gif</file>
+        <file>templates/procotol.html</file>
+        <file>images/exit.png</file>
+        <file>images/log-disabled.png</file>
+        <file>images/log-enabled.png</file>
+    </qresource>
+</RCC>
