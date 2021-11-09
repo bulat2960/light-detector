@@ -27,18 +27,22 @@ MainWindow::MainWindow(QSize screenSize, QWidget *parent)
     m_chartView->setTrackStateLabelGeometry(QRect(screenSize.width() - 270, screenSize.height() - 200, 270, 100));
     m_chartView->setDataLabelsGeometry(screenSize.width() - 350, 10);
 
-    m_client = new ModbusClient(this);
+    m_client = new ModbusClient(samplingFrequency, this);
     connect(m_client, &ModbusClient::dataParsed, this, &MainWindow::addPointToChart);
     connect(m_client, &ModbusClient::calibrationValueReceived, this, &MainWindow::startExperiment);
 
     m_mainLayout = new QVBoxLayout(this);
     createToolBar();
     m_mainLayout->addWidget(m_chartView);
+}
 
-    m_requestTimer = new QTimer(this);
-    m_requestTimer->setSingleShot(false);
-    m_requestTimer->setInterval(1000 / samplingFrequency);
-    connect(m_requestTimer, &QTimer::timeout, m_client, &ModbusClient::sendDataRequest);
+void MainWindow::resizeEvent(QResizeEvent* event)
+{
+    m_chart->legend()->setGeometry(QRectF(size().width() - 250, 0, 250, 500));
+    m_chart->updateLabeledPoints();
+    m_chartView->setTrackStateLabelGeometry(QRect(size().width() - 270, size().height() - 200, 270, 100));
+    m_chartView->setDataLabelsGeometry(size().width() - 350, 10);
+    QWidget::resizeEvent(event);
 }
 
 void MainWindow::openSettings()
@@ -190,7 +194,7 @@ void MainWindow::onExperimentStart()
         return;
     }
 
-    dialog.saveSettingsToProtocol(m_creator);
+    m_creator.setProtocolParameters(dialog.getProtocolParameters());
     m_client->sendCalibrationRequest();
 }
 
@@ -210,7 +214,7 @@ void MainWindow::startExperiment(double calibrationValue)
     }
     else
     {
-        m_requestTimer->start();
+        m_client->start();
 
         m_movie->start();
 
@@ -226,14 +230,15 @@ void MainWindow::startExperiment(double calibrationValue)
 
 void MainWindow::onExperimentStop()
 {
-    if (m_requestTimer->isActive())
+    if (m_client->isActive())
     {
         m_movie->stop();
         m_stopExperimentAction->setDisabled(true);
         m_startExperimentButton->setText(QStringLiteral("Остановлено"));
         m_calibrationAction->setEnabled(false);
-        m_requestTimer->stop();
+        m_client->stop();
         m_chartView->hideLabels();
+        m_chartView->setDisabled(true);
 
         disconnect(m_client, &ModbusClient::dataParsed, this, &MainWindow::addPointToChart);
 
@@ -304,7 +309,7 @@ void MainWindow::preparePdfGenerating()
     QVector<DataUnit> experimentData = m_chart->experimentData();
     ParametersCalculator calculator(experimentData, m_maxLightValue);
     calculator.calculate(samplingFrequency);
-    calculator.setParametersToProtocol(m_creator);
+    m_creator.setCalculatedParameters(calculator.getCalculatedParameters());
 
     m_chart->prepareToPrint();
 
@@ -327,8 +332,6 @@ void MainWindow::preparePdfGenerating()
     double tgA = m_chart->calculateAndPlotTgData(tgAmaxPointIndex, tgLineLengthInSeconds, samplingFrequency);
     m_creator.setTgA(tgA);
 
-    m_chartView->setEnabled(false);
-
     generatePdf();
 }
 
@@ -340,7 +343,14 @@ void MainWindow::generatePdf()
     box.setText(QStringLiteral("Ожидайте, производится создание протокола..."));
     box.setStandardButtons(QMessageBox::NoButton);
 
-    QTimer* timer = new QTimer(this);
+    QTimer::singleShot(1000, this, [this] {
+        QString protocolsFolderPath = getProtocolsFolder();
+        m_creator.setGraph(m_chartView->grab());
+        m_creator.setProtocolPath(protocolsFolderPath);
+        m_creator.createProtocol(); // TODO: Rework
+    });
+
+    /*QTimer* timer = new QTimer(this);
     timer->setSingleShot(true);
     timer->setInterval(1000);
     connect(timer, &QTimer::timeout, this, [this] {
@@ -348,15 +358,14 @@ void MainWindow::generatePdf()
         m_creator.setGraph(m_chartView->grab());
         m_creator.setProtocolPath(protocolsFolderPath);
         m_creator.createProtocol();
-    });
+    });*/
 
     QThread* thread = new QThread(this);
     m_creator.moveToThread(thread);
-    connect(thread, &QThread::started, timer, QOverload<>::of(&QTimer::start));
     connect(&m_creator, &ProtocolCreator::created, &box, &QMessageBox::accept);
     connect(&m_creator, &ProtocolCreator::created, thread, [thread, this] {
         thread->quit();
-        thread->wait();
+        thread->wait(1000);
         m_startExperimentButton->setIcon(QIcon(":/images/start.png"));
         m_startExperimentButton->setText(QStringLiteral("Завершено"));
     });
@@ -367,7 +376,7 @@ void MainWindow::generatePdf()
 
 MainWindow::~MainWindow()
 {
-    m_requestTimer->stop();
     m_movie->stop();
+    m_client->stop();
     m_client->disconnectDevice();
 }

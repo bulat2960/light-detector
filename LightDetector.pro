@@ -23,6 +23,7 @@ SOURCES += \
     startexperimentdialog.cpp
 
 HEADERS += \
+    calculatedparameters.h \
     chart.h \
     chartview.h \
     dataunit.h \
@@ -33,6 +34,7 @@ HEADERS += \
     parameterscalculator.h \
     pointlabelitem.h \
     protocolcreator.h \
+    protocolparameters.h \
     settingsdialog.h \
     startexperimentdialog.h
 

@@ -4,6 +4,7 @@
 #include <QString>
 #include <QFile>
 #include <QMap>
+#include <QTextStream>
 
 class Logger
 {
@@ -31,6 +32,7 @@ private:
     Logger& operator=(const Logger& logger) = delete;
 
     QFile m_logFile;
+    QTextStream m_dataStream;
 
     QMap<Type, QString> m_types;
 

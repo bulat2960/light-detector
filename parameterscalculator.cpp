@@ -2,15 +2,16 @@
 
 #include "logger.h"
 
-ParametersCalculator::ParametersCalculator(QVector<DataUnit> experimentData, double maxLightValue)
+ParametersCalculator::ParametersCalculator(const QVector<DataUnit>& experimentData, double maxLightValue)
+    : m_experimentData(experimentData),
+      m_maxLightValue(maxLightValue)
 {   
-    m_maxLightValue = maxLightValue;
-    m_experimentData = experimentData;
+
 }
 
 void ParametersCalculator::analyzeLightData()
 {
-    double Imin = 999999;
+    double Imin = std::numeric_limits<double>::max();
     double It2 = 0;
     double It4 = 0;
 
@@ -32,30 +33,30 @@ void ParametersCalculator::analyzeLightData()
             m_dt4Point = {timestamp, smokeValue};
         }
 
-        if (lightValue < Imin)
+        if (lightValue < Imin) // Min light value <=> Max smoke value
         {
             Imin = lightValue;
             m_dMaxPoint = {timestamp, smokeValue};
         }
     }
 
-    m_dMax = 132 * std::log10(m_maxLightValue / Imin);
-    m_dt2 = 132 * std::log10(m_maxLightValue / It2);
-    m_dt4 = 132 * std::log10(m_maxLightValue / It4);
+    m_calculatedParameters.dMax = 132 * std::log10(m_maxLightValue / Imin);
+    m_calculatedParameters.dt2 = 132 * std::log10(m_maxLightValue / It2);
+    m_calculatedParameters.dt4 = 132 * std::log10(m_maxLightValue / It4);
 
     Logger::instance().logMessage(Logger::Type::CALCULATOR,
-                                  QStringLiteral("DMax = %1").arg(m_dMax));
+                                  QStringLiteral("DMax = %1").arg(m_calculatedParameters.dMax));
 
     Logger::instance().logMessage(Logger::Type::CALCULATOR,
-                                  QStringLiteral("Dt2 = %1").arg(m_dt2));
+                                  QStringLiteral("Dt2 = %1").arg(m_calculatedParameters.dt2));
 
     Logger::instance().logMessage(Logger::Type::CALCULATOR,
-                                  QStringLiteral("Dt4 = %1").arg(m_dt4));
+                                  QStringLiteral("Dt4 = %1").arg(m_calculatedParameters.dt4));
 }
 
 void ParametersCalculator::analyzeSmokeData(int samplingFrequency)
 {
-    double minDistanceToD16 = 999999;
+    double minDistanceToD16 = std::numeric_limits<double>::max();
 
     QVector<double> DmTimestamps(5);
     const QVector<double> coefs = {0.1, 0.3, 0.5, 0.7, 0.9};
@@ -72,21 +73,24 @@ void ParametersCalculator::analyzeSmokeData(int samplingFrequency)
         if (distanceToD16 < minDistanceToD16)
         {
             minDistanceToD16 = distanceToD16;
-            m_d16 = timestamp;
+            m_calculatedParameters.d16 = timestamp;
             m_d16Point = {timestamp, smokeValue};
         }
 
-        for (int i = 0; i < DmTimestamps.size(); i++)
+        for (int j = 0; j < DmTimestamps.size(); j++)
         {
-            if (smokeValue < coefs[i] * m_dMax)
+            if (smokeValue < coefs[j] * m_calculatedParameters.dMax)
             {
-                DmTimestamps[i] = timestamp;
+                DmTimestamps[j] = timestamp;
             }
         }
 
         int samplesInMinute = 60 * samplingFrequency;
 
-        if (m_experimentData.size() >= samplesInMinute and i >= samplesInMinute)
+        bool experimentLengthMinuteOrMore = i >= samplesInMinute;
+        bool samplesCountEnoughForMinute = m_experimentData.size() >= samplesInMinute;
+
+        if (experimentLengthMinuteOrMore and samplesCountEnoughForMinute)
         {
             double minuteSmokeDiff = smokeValue - m_experimentData[i - 60 * samplingFrequency].smokeValue;
 
@@ -103,19 +107,19 @@ void ParametersCalculator::analyzeSmokeData(int samplingFrequency)
     {
         timeSum = 1.0 / (DmTimestamps[i + 1] - DmTimestamps[i]);
     }
-    m_Kcp = 0.2 * m_dMax * timeSum / 4;
 
-    m_Unp = m_dMax * m_Kcp / (100 * m_d16);
+    m_calculatedParameters.Kcp = 0.2 * m_calculatedParameters.dMax * timeSum / 4;
+    m_calculatedParameters.Unp = m_calculatedParameters.dMax * m_calculatedParameters.Kcp / (100 * m_calculatedParameters.d16);
 
-
-    Logger::instance().logMessage(Logger::Type::CALCULATOR,
-                                  QStringLiteral("D16 = %1").arg(m_d16));
 
     Logger::instance().logMessage(Logger::Type::CALCULATOR,
-                                  QStringLiteral("Kcp = %1").arg(m_Kcp));
+                                  QStringLiteral("D16 = %1").arg(m_calculatedParameters.d16));
 
     Logger::instance().logMessage(Logger::Type::CALCULATOR,
-                                  QStringLiteral("Unp = %1").arg(m_Unp));
+                                  QStringLiteral("Kcp = %1").arg(m_calculatedParameters.Kcp));
+
+    Logger::instance().logMessage(Logger::Type::CALCULATOR,
+                                  QStringLiteral("Unp = %1").arg(m_calculatedParameters.Unp));
 }
 
 void ParametersCalculator::calculate(int samplingFrequency)
@@ -149,12 +153,7 @@ QPointF ParametersCalculator::d16Point() const
     return m_d16Point;
 }
 
-void ParametersCalculator::setParametersToProtocol(ProtocolCreator& creator)
+CalculatedParameters ParametersCalculator::getCalculatedParameters() const
 {
-    creator.setDMax(m_dMax);
-    creator.setDt2(m_dt2);
-    creator.setDt4(m_dt4);
-    creator.setD16(m_d16);
-    creator.setKcp(m_Kcp);
-    creator.setUnp(m_Unp);
+    return m_calculatedParameters;
 }

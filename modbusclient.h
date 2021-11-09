@@ -2,12 +2,13 @@
 #define MODBUSCLIENT_H
 
 #include <QModbusRtuSerialClient>
+#include <QTimer>
 
 class ModbusClient : public QModbusRtuSerialClient
 {
     Q_OBJECT
 public:
-    ModbusClient(QObject* parent = nullptr);
+    ModbusClient(int requestsInSecond, QObject* parent = nullptr);
 
     void setServerAddress(int serverAddress);
 
@@ -15,10 +16,14 @@ public:
     void checkConnection();
     void getCalibrationValue();
 
+    void start();
+    bool isActive() const;
+    void stop();
+
 signals:
     void dataParsed(double value);
     void calibrationValueReceived(double value);
-    void connectionStateChecked(int value);
+    void connectionEstablished();
 
 public slots:
     void sendDeviceStateRequest();
@@ -27,6 +32,8 @@ public slots:
 
 private:
     int m_serverAddress;
+
+    QTimer* m_requestTimer {nullptr};
 
     QModbusDataUnit createDeviceStateRequest();
     QModbusDataUnit createDataRequest();

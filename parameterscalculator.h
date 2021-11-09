@@ -6,15 +6,16 @@
 
 #include "protocolcreator.h"
 #include "dataunit.h"
+#include "calculatedparameters.h"
 
 class ParametersCalculator
 {
 public:
-    ParametersCalculator(QVector<DataUnit> experimentData, double maxLightValue);
+    ParametersCalculator(const QVector<DataUnit>& experimentData, double maxLightValue);
 
     void calculate(int samplingFrequency);
 
-    void setParametersToProtocol(ProtocolCreator& creator);
+    CalculatedParameters getCalculatedParameters() const;
 
     int tgMaxPointIndex() const;
 
@@ -24,16 +25,11 @@ public:
     QPointF d16Point() const;
 
 private:
+    CalculatedParameters m_calculatedParameters;
+
     QVector<DataUnit> m_experimentData;
 
     double m_maxLightValue;
-
-    double m_dMax {0};
-    double m_dt2 {0};
-    double m_dt4 {0};
-    double m_d16 {0};
-    double m_Kcp {0};
-    double m_Unp {0};
 
     int m_tgMaxPointIndex;
 

@@ -9,6 +9,7 @@
 #include <QGraphicsSimpleTextItem>
 
 #include "dataunit.h"
+#include "pointlabelitem.h"
 
 class Chart : public QChart
 {
@@ -28,6 +29,8 @@ public:
 
     void addLabeledPoint(QPointF point, const QString& label);
     double calculateAndPlotTgData(int pointIndex, int lengthInSeconds, int sampleFrequency);
+
+    void updateLabeledPoints();
 
     QVector<DataUnit> experimentData() const;
 
@@ -56,6 +59,20 @@ private:
     QValueAxis* m_timeAxis {nullptr};
     QValueAxis* m_smokeAxis {nullptr};
     QValueAxis* m_lightAxis {nullptr};
+
+    struct LabeledPoint
+    {
+        PointLabelItem* item {nullptr};
+        QPointF point;
+
+        LabeledPoint(PointLabelItem* item, QPointF point)
+        {
+            this->item = item;
+            this->point = point;
+        }
+    };
+
+    QVector<LabeledPoint> labeledPoints;
 
     void setupTitle();
     void setupAxes();

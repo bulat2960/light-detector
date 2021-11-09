@@ -6,19 +6,21 @@
 #include <QLineEdit>
 #include <QComboBox>
 
-#include "protocolcreator.h"
+#include "protocolparameters.h"
 
 class StartExperimentDialog : public QDialog
 {
 public:
     StartExperimentDialog(QWidget* parent = nullptr);
 
-    void saveSettingsToProtocol(ProtocolCreator& creator);
+    ProtocolParameters getProtocolParameters() const;
 
 private slots:
     void checkSettings();
 
 private:
+    ProtocolParameters m_protocolParameters;
+
     QVBoxLayout* m_layout {nullptr};
 
     QLineEdit* m_nameEdit {nullptr};

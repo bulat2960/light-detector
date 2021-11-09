@@ -20,12 +20,7 @@ SettingsDialog::SettingsDialog(ModbusClient* client, QWidget *parent)
     createPortElementsGrid();
     createDialogButtonsLayout();
 
-    QTimer* scanTimer = new QTimer(this);
-    connect(scanTimer, &QTimer::timeout, this, &SettingsDialog::scanExistingPorts);
-
-    scanTimer->setSingleShot(true);
-    scanTimer->setInterval(100);
-    scanTimer->start();
+    QTimer::singleShot(100, this, &SettingsDialog::scanExistingPorts);
 
     if (m_client->state() == QModbusDevice::ConnectedState)
     {
@@ -50,12 +45,9 @@ void SettingsDialog::createDataElementsGrid()
     m_stopBitsBox = new QComboBox(this);
     m_stopBitsBox->addItems({"One", "One and half", "Two"});
 
-    m_readTimeoutBox = new QComboBox(this);
-    m_readTimeoutBox->addItems({"100", "200", "300"});
-    m_readTimeoutBox->setCurrentText("200");
-
-    m_writeTimeoutBox = new QComboBox(this);
-    m_writeTimeoutBox->addItems({"1000"});
+    m_timeoutBox = new QComboBox(this);
+    m_timeoutBox->addItems({"100", "200", "300"});
+    m_timeoutBox->setCurrentText("200");
 
     m_addressLineEdit = new QLineEdit(this);
     m_addressLineEdit->setText("1");
@@ -79,13 +71,10 @@ void SettingsDialog::createDataElementsGrid()
     dataLayout->addWidget(m_stopBitsBox, 4, 1);
 
     dataLayout->addWidget(new QLabel("Ожидание чтения, мс"), 5, 0);
-    dataLayout->addWidget(m_readTimeoutBox, 5, 1);
+    dataLayout->addWidget(m_timeoutBox, 5, 1);
 
-    dataLayout->addWidget(new QLabel("Ожидание записи, мс"), 6, 0);
-    dataLayout->addWidget(m_writeTimeoutBox, 6, 1);
-
-    dataLayout->addWidget(new QLabel("Адрес"), 7, 0);
-    dataLayout->addWidget(m_addressLineEdit, 7, 1);
+    dataLayout->addWidget(new QLabel("Адрес"), 6, 0);
+    dataLayout->addWidget(m_addressLineEdit, 6, 1);
 
     m_mainLayout->addLayout(dataLayout);
 }
@@ -95,14 +84,15 @@ void SettingsDialog::createPortElementsGrid()
     m_checkConnectionButton = new QPushButton("Проверка связи", this);
     m_checkConnectionButton->setDisabled(true);
     connect(m_checkConnectionButton, &QPushButton::clicked, m_client, &ModbusClient::sendDeviceStateRequest);
-    connect(m_client, &ModbusClient::connectionStateChecked, this, &SettingsDialog::parseDeviceState);
+    connect(m_client, &ModbusClient::connectionEstablished, this, &SettingsDialog::onConnectionEstablished);
 
     m_portNameLabel = new QLabel(this);
     m_portNameLabel->setText(QStringLiteral("Порт закрыт"));
     m_portNameLabel->setStyleSheet(QStringLiteral("QLabel { background-color: lightgray };"));
 
     m_connectionEstablishedLabel = new QLabel(this);
-    m_connectionEstablishedLabel->setText(QStringLiteral("SH v200 28-03-2017"));
+    //m_connectionEstablishedLabel->setText(QStringLiteral("SH v200 28-03-2017"));
+    m_connectionEstablishedLabel->setText(QStringLiteral("Соединение активно"));
     m_connectionEstablishedLabel->setStyleSheet(QStringLiteral("QLabel { background-color: lightgreen };"));
     m_connectionEstablishedLabel->hide();
 
@@ -118,8 +108,7 @@ void SettingsDialog::createPortElementsGrid()
         m_dataBitsBox->setEnabled(false);
         m_parityBox->setEnabled(false);
         m_stopBitsBox->setEnabled(false);
-        m_readTimeoutBox->setEnabled(false);
-        m_writeTimeoutBox->setEnabled(false);
+        m_timeoutBox->setEnabled(false);
         m_addressLineEdit->setEnabled(false);
 
         m_portNameLabel->setText(m_portBox->currentText());
@@ -155,26 +144,29 @@ void SettingsDialog::createDialogButtonsLayout()
 
 void SettingsDialog::openPort()
 {
-    QMap<QString, int> parityMap;
-    parityMap.insert(QStringLiteral("None"),  QSerialPort::NoParity);
-    parityMap.insert(QStringLiteral("Even"),  QSerialPort::EvenParity);
-    parityMap.insert(QStringLiteral("Odd"),   QSerialPort::OddParity);
-    parityMap.insert(QStringLiteral("Space"), QSerialPort::SpaceParity);
-    parityMap.insert(QStringLiteral("Mark"),  QSerialPort::MarkParity);
+    QMap<QString, int> parityMap =
+    {
+        {QStringLiteral("None"),  QSerialPort::NoParity},
+        {QStringLiteral("Even"),  QSerialPort::EvenParity},
+        {QStringLiteral("Odd"),   QSerialPort::OddParity},
+        {QStringLiteral("Space"), QSerialPort::SpaceParity},
+        {QStringLiteral("Mark"),  QSerialPort::MarkParity}
+    };
 
-    int parity = parityMap[m_parityBox->currentText()];
 
-    QMap<QString, int> stopBitsMap;
-    stopBitsMap.insert(QStringLiteral("One"),          QSerialPort::OneStop);
-    stopBitsMap.insert(QStringLiteral("One and half"), QSerialPort::OneAndHalfStop);
-    stopBitsMap.insert(QStringLiteral("Two"),          QSerialPort::TwoStop);
+    QMap<QString, int> stopBitsMap =
+    {
+        {QStringLiteral("One"),          QSerialPort::OneStop},
+        {QStringLiteral("One and half"), QSerialPort::OneAndHalfStop},
+        {QStringLiteral("Two"),          QSerialPort::TwoStop}
+    };
 
     QString name = m_portBox->currentText();
+    int parity = parityMap[m_parityBox->currentText()];
     int baudRate = m_baudRateBox->currentText().toInt();
     int dataBits = m_dataBitsBox->currentText().toInt();
     int stopBits = stopBitsMap[m_stopBitsBox->currentText()];
-    int readTimeout = m_readTimeoutBox->currentText().toInt();
-    int writeTimeout = m_writeTimeoutBox->currentText().toInt(); (void)writeTimeout; // TODO: WTF is this parameter for?
+    int timeout = m_timeoutBox->currentText().toInt();
     int address = m_addressLineEdit->text().toInt();
 
     m_client->setConnectionParameter(QModbusDevice::SerialPortNameParameter, name);
@@ -184,7 +176,7 @@ void SettingsDialog::openPort()
     m_client->setConnectionParameter(QModbusDevice::SerialStopBitsParameter, stopBits);
     m_client->setServerAddress(address);
 
-    m_client->setTimeout(readTimeout);
+    m_client->setTimeout(timeout);
     m_client->setNumberOfRetries(0);
 
     if (not m_client->connectDevice())
@@ -223,10 +215,8 @@ void SettingsDialog::scanExistingPorts()
     changeBaudRates();
 }
 
-void SettingsDialog::parseDeviceState(int value)
+void SettingsDialog::onConnectionEstablished()
 {
-    // TODO: parse device state
-    Q_UNUSED(value);
     m_checkConnectionButton->setEnabled(false);
     m_connectionEstablishedLabel->show();
 }

@@ -12,11 +12,6 @@
 
 #include "logger.h"
 
-ProtocolCreator::ProtocolCreator()
-{
-
-}
-
 QString ProtocolCreator::convertTemplateToHtml(const QString &templateFilename)
 {
     QFile templateFile(templateFilename);
@@ -32,34 +27,48 @@ QString ProtocolCreator::convertTemplateToHtml(const QString &templateFilename)
 
     QString resultHtml(templateString);
 
-    resultHtml = resultHtml.arg(m_protocolNumber);
-
     QDateTime currentDateTime = QDateTime::currentDateTime();
     QString currentDateTimeString = QLocale::system().toString(currentDateTime, QStringLiteral("ddd MMM yyyy hh:mm:ss"));
 
+    resultHtml = resultHtml.arg(m_protocolParameters.protocolNumber);
     resultHtml = resultHtml.arg(currentDateTimeString);
 
-    resultHtml = resultHtml.arg(m_name);
-    resultHtml = resultHtml.arg(m_brand);
-    resultHtml = resultHtml.arg(m_thickness);
-    resultHtml = resultHtml.arg(m_provider);
+    resultHtml = resultHtml.arg(m_protocolParameters.name);
+    resultHtml = resultHtml.arg(m_protocolParameters.brand);
+    resultHtml = resultHtml.arg(m_protocolParameters.thickness);
+    resultHtml = resultHtml.arg(m_protocolParameters.provider);
 
-    resultHtml = resultHtml.arg(m_conditioning);
-    resultHtml = resultHtml.arg(m_regime);
-    resultHtml = resultHtml.arg(m_density);
-    resultHtml = resultHtml.arg(m_samplesNumber);
+    resultHtml = resultHtml.arg(m_protocolParameters.conditioning);
+    resultHtml = resultHtml.arg(m_protocolParameters.regime);
+    resultHtml = resultHtml.arg(m_protocolParameters.density);
+    resultHtml = resultHtml.arg(m_protocolParameters.samplesNumber);
 
-    resultHtml = resultHtml.arg(m_dMax);
-    resultHtml = resultHtml.arg(m_dt2);
-    resultHtml = resultHtml.arg(m_dt4);
-    resultHtml = resultHtml.arg(m_d16);
+    resultHtml = resultHtml.arg(m_calculatedParameters.dMax);
+    resultHtml = resultHtml.arg(m_calculatedParameters.dt2);
+    resultHtml = resultHtml.arg(m_calculatedParameters.dt4);
+    resultHtml = resultHtml.arg(m_calculatedParameters.d16);
     resultHtml = resultHtml.arg(m_tgA);
-    resultHtml = resultHtml.arg(m_Kcp);
-    resultHtml = resultHtml.arg(m_Unp);
+    resultHtml = resultHtml.arg(m_calculatedParameters.Kcp);
+    resultHtml = resultHtml.arg(m_calculatedParameters.Unp);
 
-    resultHtml = resultHtml.arg(m_fio);
+    resultHtml = resultHtml.arg(m_protocolParameters.fio);
 
     return resultHtml;
+}
+
+void ProtocolCreator::setProtocolParameters(const ProtocolParameters &protocolParameters)
+{
+    m_protocolParameters = protocolParameters;
+}
+
+void ProtocolCreator::setCalculatedParameters(const CalculatedParameters& calculatedParameters)
+{
+    m_calculatedParameters = calculatedParameters;
+}
+
+void ProtocolCreator::setTgA(double tgA)
+{
+    m_tgA = tgA;
 }
 
 void ProtocolCreator::setProtocolPath(const QString& path)
@@ -70,6 +79,11 @@ void ProtocolCreator::setProtocolPath(const QString& path)
                                   QStringLiteral("Protocol path set to %1").arg(path));
 }
 
+void ProtocolCreator::setGraph(const QPixmap& graph)
+{
+    m_graph = graph;
+}
+
 void ProtocolCreator::createProtocol()
 {
     QElapsedTimer timer;
@@ -77,7 +91,7 @@ void ProtocolCreator::createProtocol()
 
     QPrinter printer(QPrinter::HighResolution);
     printer.setPrinterName("Microsoft Print to PDF");
-    printer.setOutputFileName(m_path + QStringLiteral("/protocol-%1.pdf").arg(m_protocolNumber));
+    printer.setOutputFileName(m_path + QStringLiteral("/protocol-%1.pdf").arg(m_protocolParameters.protocolNumber));
     printer.setOutputFormat(QPrinter::PdfFormat);
     printer.setPageSize(QPageSize::A4);
     printer.setPageOrientation(QPageLayout::Portrait);
@@ -110,130 +124,4 @@ void ProtocolCreator::createProtocol()
 
     Logger::instance().logMessage(Logger::Type::PROTOCOL,
                                   QStringLiteral("Protocol created in %1 seconds").arg(timer.elapsed() / 1000.0));
-}
-
-void ProtocolCreator::setName(const QString& name)
-{
-    if (name.isEmpty())
-    {
-        m_name = "-";
-        return;
-    }
-
-    m_name = name;
-
-}
-void ProtocolCreator::setBrand(const QString& brand)
-{
-    if (brand.isEmpty())
-    {
-        m_brand = "-";
-        return;
-    }
-
-    m_brand = brand;
-}
-
-void ProtocolCreator::setProvider(const QString& provider)
-{
-    if (provider.isEmpty())
-    {
-        m_provider = "-";
-        return;
-    }
-
-    m_provider = provider;
-}
-
-void ProtocolCreator::setThickness(double thickness)
-{
-    m_thickness = thickness;
-}
-
-void ProtocolCreator::setProtocolNumber(int protocolNumber)
-{
-    m_protocolNumber = protocolNumber;
-}
-
-void ProtocolCreator::setDensity(double density)
-{
-    m_density = density;
-}
-
-void ProtocolCreator::setFio(const QString& fio)
-{
-    if (fio.isEmpty())
-    {
-        m_fio = "-";
-        return;
-    }
-
-    m_fio = fio;
-}
-
-void ProtocolCreator::setSamplesNumber(int samplesNumber)
-{
-    m_samplesNumber = samplesNumber;
-}
-
-void ProtocolCreator::setConditioning(const QString& conditioning)
-{
-    if (conditioning.isEmpty())
-    {
-        m_conditioning = "-";
-        return;
-    }
-
-    m_conditioning = conditioning;
-}
-
-void ProtocolCreator::setRegime(const QString& regime)
-{
-    if (regime.isEmpty())
-    {
-        m_regime = "-";
-        return;
-    }
-
-    m_regime = regime;
-}
-
-void ProtocolCreator::setDMax(double dMax)
-{
-    m_dMax = dMax;
-}
-
-void ProtocolCreator::setDt2(double dt2)
-{
-    m_dt2 = dt2;
-}
-
-void ProtocolCreator::setDt4(double dt4)
-{
-    m_dt4 = dt4;
-}
-
-void ProtocolCreator::setD16(double d16)
-{
-    m_d16 = d16;
-}
-
-void ProtocolCreator::setTgA(double tgA)
-{
-    m_tgA = tgA;
-}
-
-void ProtocolCreator::setKcp(double Kcp)
-{
-    m_Kcp = Kcp;
-}
-
-void ProtocolCreator::setUnp(double Unp)
-{
-    m_Unp = Unp;
-}
-
-void ProtocolCreator::setGraph(const QPixmap& graph)
-{
-    m_graph = graph;
 }

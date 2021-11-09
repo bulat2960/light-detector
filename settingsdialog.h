@@ -17,7 +17,7 @@ public:
 
 private slots:
     void scanExistingPorts();
-    void parseDeviceState(int value);
+    void onConnectionEstablished();
 
 private:
     QComboBox* m_portBox {nullptr};
@@ -25,8 +25,7 @@ private:
     QComboBox* m_dataBitsBox {nullptr};
     QComboBox* m_parityBox {nullptr};
     QComboBox* m_stopBitsBox {nullptr};
-    QComboBox* m_readTimeoutBox {nullptr};
-    QComboBox* m_writeTimeoutBox {nullptr};
+    QComboBox* m_timeoutBox {nullptr};
     QLineEdit* m_addressLineEdit {nullptr};
 
     QLabel* m_portNameLabel {nullptr};

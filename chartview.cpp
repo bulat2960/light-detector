@@ -15,19 +15,19 @@ ChartView::ChartView(Chart *chart, QWidget *parent)
                                         QStringLiteral("Режим отслеживания выключен"),
                                         this);
 
-    QFont font = m_trackStateLabel->font();
-    font.setBold(true);
-    font.setPixelSize(14);
-    m_trackStateLabel->setFont(font);
+    QFont trackStateLabelFont = m_trackStateLabel->font();
+    trackStateLabelFont.setBold(true);
+    trackStateLabelFont.setPixelSize(14);
+    m_trackStateLabel->setFont(trackStateLabelFont);
 
     m_lightValueLabel = new QLabel("I = None", this);
     m_smokeValueLabel = new QLabel("Dуд = None", this);
 
-    font = m_lightValueLabel->font();
-    font.setPixelSize(14);
-    font.setBold(true);
-    m_lightValueLabel->setFont(font);
-    m_smokeValueLabel->setFont(font);
+    QFont dataLabelFont;
+    dataLabelFont.setPixelSize(14);
+    dataLabelFont.setBold(true);
+    m_lightValueLabel->setFont(dataLabelFont);
+    m_smokeValueLabel->setFont(dataLabelFont);
 }
 
 void ChartView::changeDataLabels(double lightValue, double smokeValue)
@@ -48,8 +48,8 @@ void ChartView::setTrackStateLabelGeometry(const QRect& geometry)
 
 void ChartView::setDataLabelsGeometry(int left, int top)
 {
-    m_lightValueLabel->setGeometry(left, top, 200, 25);
-    m_smokeValueLabel->setGeometry(left, top + 25, 200, 25);
+    m_lightValueLabel->setGeometry(left, top, 100, 25);
+    m_smokeValueLabel->setGeometry(left, top + 25, 100, 25);
 }
 
 void ChartView::hideLabels()

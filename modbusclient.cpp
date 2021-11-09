@@ -6,10 +6,28 @@
 
 #include "logger.h"
 
-ModbusClient::ModbusClient(QObject* parent)
+ModbusClient::ModbusClient(int requestsInSecond, QObject* parent)
     : QModbusRtuSerialClient(parent)
 {
+    m_requestTimer = new QTimer(this);
+    m_requestTimer->setSingleShot(false);
+    m_requestTimer->setInterval(1000 / requestsInSecond);
+    connect(m_requestTimer, &QTimer::timeout, this, &ModbusClient::sendDataRequest);
+}
 
+void ModbusClient::start()
+{
+    m_requestTimer->start();
+}
+
+void ModbusClient::stop()
+{
+    m_requestTimer->stop();
+}
+
+bool ModbusClient::isActive() const
+{
+    return m_requestTimer->isActive();
 }
 
 void ModbusClient::setServerAddress(int serverAddress)
@@ -21,6 +39,14 @@ void ModbusClient::sendDataRequest()
 {
     QModbusDataUnit unit = createDataRequest();
     QModbusReply* reply = sendReadRequest(unit, m_serverAddress);
+
+    if (not reply)
+    {
+        Logger::instance().logMessage(Logger::Type::MODBUS,
+                                      QStringLiteral("Send data request: null reply"));
+        return;
+    }
+
     connect(reply, &QModbusReply::finished, this, &ModbusClient::parseDeviceData);
 }
 
@@ -28,6 +54,14 @@ void ModbusClient::sendDeviceStateRequest()
 {
     QModbusDataUnit unit = createDeviceStateRequest();
     QModbusReply* reply = sendReadRequest(unit, m_serverAddress);
+
+    if (not reply)
+    {
+        Logger::instance().logMessage(Logger::Type::MODBUS,
+                                      QStringLiteral("Send device state request: null reply"));
+        return;
+    }
+
     connect(reply, &QModbusReply::finished, this, &ModbusClient::checkConnection);
 
     Logger::instance().logMessage(Logger::Type::MODBUS,
@@ -38,6 +72,14 @@ void ModbusClient::sendCalibrationRequest()
 {
     QModbusDataUnit unit = createDataRequest();
     QModbusReply* reply = sendReadRequest(unit, m_serverAddress);
+
+    if (not reply)
+    {
+        Logger::instance().logMessage(Logger::Type::MODBUS,
+                                      QStringLiteral("Send calibration request: null reply"));
+        return;
+    }
+
     connect(reply, &QModbusReply::finished, this, &ModbusClient::getCalibrationValue);
 
     Logger::instance().logMessage(Logger::Type::MODBUS,
@@ -79,9 +121,6 @@ void ModbusClient::parseDeviceData()
         quint16 secondValue = unit.value(1);
 
         value = pairOfUintToFloat(firstValue, secondValue);
-
-        Logger::instance().logMessage(Logger::Type::MODBUS,
-                                      QStringLiteral("Device data: %1").arg(value));
     }
     else
     {
@@ -94,6 +133,9 @@ void ModbusClient::parseDeviceData()
     reply->deleteLater();
 
     emit dataParsed(value);
+
+    Logger::instance().logMessage(Logger::Type::MODBUS,
+                                  QStringLiteral("Device data: %1").arg(value));
 }
 
 void ModbusClient::checkConnection()
@@ -107,18 +149,10 @@ void ModbusClient::checkConnection()
 
     if (reply->error() == QModbusDevice::NoError)
     {
-        const QModbusDataUnit unit = reply->result();
-
-        int startAddress = unit.startAddress();
-        quint16 value = unit.value(0);
-
-        // TODO: Get bytes to analyze device state
-        int result = 0;
-
         Logger::instance().logMessage(Logger::Type::MODBUS,
-                                      QStringLiteral("Connection state: %1").arg(result));
+                                      QStringLiteral("Connection established"));
 
-        emit connectionStateChecked(result);
+        emit connectionEstablished();
     }
     else
     {

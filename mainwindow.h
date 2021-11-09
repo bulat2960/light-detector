@@ -37,6 +37,9 @@ private slots:
     void preparePdfGenerating();
     void generatePdf();
 
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+
 private:
     int m_serverAddress {1};
     double m_maxLightValue {std::numeric_limits<double>::quiet_NaN()};
@@ -45,7 +48,6 @@ private:
 
     QElapsedTimer m_experimentTimer;
 
-    QTimer* m_requestTimer {nullptr};
     QMovie* m_movie {nullptr};
 
     ModbusClient* m_client {nullptr};

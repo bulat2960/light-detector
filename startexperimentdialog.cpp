@@ -130,7 +130,11 @@ void StartExperimentDialog::checkSettings()
     box.setIcon(QMessageBox::Information);
     box.setWindowTitle(QStringLiteral("Внимание!"));
 
-    m_thicknessEdit->text().toDouble(&ok);
+    QString name = m_nameEdit->text();
+    QString brand = m_brandEdit->text();
+    QString provider = m_providerEdit->text();
+
+    double thickness = m_thicknessEdit->text().toDouble(&ok);
     if (not ok)
     {
         box.setText(QStringLiteral("Толщина установлена неверно. Введите корректное вещественное число."));
@@ -138,7 +142,7 @@ void StartExperimentDialog::checkSettings()
         return;
     }
 
-    m_protocolNumberEdit->text().toInt(&ok);
+    int protocolNumber = m_protocolNumberEdit->text().toInt(&ok);
     if (not ok)
     {
         box.setText(QStringLiteral("Номер протокола установлен неверно. Введите корректное целое число."));
@@ -146,7 +150,7 @@ void StartExperimentDialog::checkSettings()
         return;
     }
 
-    m_densityEdit->text().toDouble(&ok);
+    double density = m_densityEdit->text().toDouble(&ok);
     if (not ok)
     {
         box.setText(QStringLiteral("Плотность потока установлена неверно. Введите корректное вещественное число."));
@@ -154,7 +158,9 @@ void StartExperimentDialog::checkSettings()
         return;
     }
 
-    m_samplesNumberEdit->text().toInt(&ok);
+    QString fio = m_fioEdit->text();
+
+    int samplesNumber = m_samplesNumberEdit->text().toInt(&ok);
     if (not ok)
     {
         box.setText(QStringLiteral("Число образцов установлено неверно. Введите корректное целое число."));
@@ -162,32 +168,26 @@ void StartExperimentDialog::checkSettings()
         return;
     }
 
-    QDialog::accept();
-}
-
-void StartExperimentDialog::saveSettingsToProtocol(ProtocolCreator& creator)
-{
-    QString name = m_nameEdit->text();
-    QString brand = m_brandEdit->text();
-    QString provider = m_providerEdit->text();
-    double thickness = m_thicknessEdit->text().toDouble();
-
-    int protocolNumber = m_protocolNumberEdit->text().toInt();
-    int density = m_densityEdit->text().toDouble();
-    QString fio = m_fioEdit->text();
-    int samplesNumber = m_samplesNumberEdit->text().toInt();
     QString conditioning = m_conditioningEdit->text();
     QString regime = m_regimeBox->currentText();
 
-    creator.setName(name);
-    creator.setBrand(brand);
-    creator.setProvider(provider);
-    creator.setThickness(thickness);
 
-    creator.setProtocolNumber(protocolNumber);
-    creator.setDensity(density);
-    creator.setFio(fio);
-    creator.setSamplesNumber(samplesNumber);
-    creator.setConditioning(conditioning);
-    creator.setRegime(regime);
+    m_protocolParameters.name = name;
+    m_protocolParameters.brand = brand;
+    m_protocolParameters.provider = provider;
+    m_protocolParameters.thickness = thickness;
+
+    m_protocolParameters.protocolNumber = protocolNumber;
+    m_protocolParameters.density = density;
+    m_protocolParameters.fio = fio;
+    m_protocolParameters.samplesNumber = samplesNumber;
+    m_protocolParameters.conditioning = conditioning;
+    m_protocolParameters.regime = regime;
+
+    QDialog::accept();
+}
+
+ProtocolParameters StartExperimentDialog::getProtocolParameters() const
+{
+    return m_protocolParameters;
 }

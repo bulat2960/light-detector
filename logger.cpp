@@ -2,6 +2,7 @@
 
 #include <QDateTime>
 #include <QDir>
+#include <QTextStream>
 
 Logger::Logger()
 {
@@ -12,15 +13,18 @@ Logger::Logger()
         dir.mkpath(".");
     }
 
+
     m_logFile.setFileName(QStringLiteral("logs/log-%1_%2.txt")
                           .arg(QDateTime::currentDateTime().toString("dd-MM-yyyy"))
                           .arg((QDateTime::currentDateTime().toString("hh-mm-ss"))));
 
-    m_types.insert(Type::MODBUS,     "MODBUS:     ");
-    m_types.insert(Type::CALCULATOR, "CALCULATOR: ");
-    m_types.insert(Type::CHART,      "CHART:      ");
-    m_types.insert(Type::PROTOCOL,   "PROTOCOL:   ");
-    m_types.insert(Type::EXPERIMENT, "EXPERIMENT: ");
+    m_dataStream.setDevice(&m_logFile);
+
+    m_types.insert(Type::MODBUS,     "MODBUS:    ");
+    m_types.insert(Type::CALCULATOR, "CALCULATOR:");
+    m_types.insert(Type::CHART,      "CHART:     ");
+    m_types.insert(Type::PROTOCOL,   "PROTOCOL:  ");
+    m_types.insert(Type::EXPERIMENT, "EXPERIMENT:");
 }
 
 void Logger::setLoggingEnabled(bool enabled)
@@ -40,7 +44,7 @@ Logger& Logger::instance()
 }
 
 void Logger::logMessage(Type type, const QString &message)
-{
+{   
     if (not m_loggingEnabled)
     {
         return;
@@ -51,14 +55,13 @@ void Logger::logMessage(Type type, const QString &message)
         m_logFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
     }
 
-    QByteArray arr;
-    arr.append("[" + QDateTime::currentDateTime().toString("dd-MM-yy hh:mm:ss").toUtf8() + "]");
-    arr.append(", ");
-    arr.append(m_types[type].toUtf8());
-    arr.append(message.toUtf8());
-    arr.append("\n");
+    QString currentDateTime = QDateTime::currentDateTime().toString("dd-MM-yy hh:mm:ss").toUtf8();
+    QString str = QStringLiteral("[%1], %2 %3\n")
+                  .arg(currentDateTime)
+                  .arg(m_types[type])
+                  .arg(message);
 
-    m_logFile.write(arr);
+    m_dataStream << str;
 }
 
 Logger::~Logger()

@@ -65,7 +65,7 @@ void Chart::setupTitle()
 
     setTitleBrush(titleColor);
     setTitleFont(font);
-    setTitle(QStringLiteral("Графики светового потока и оптической плотности дыма"));
+    setTitle(QStringLiteral("Световой поток и плотность дыма"));
 }
 
 void Chart::prepareToPrint()
@@ -189,15 +189,29 @@ void Chart::addLabeledPoint(QPointF point, const QString& label)
     }
 
     QPointF pos = mapToPosition(point, m_smokeSeries);
+
     PointLabelItem* item = new PointLabelItem(label);
     item->setPos(pos);
     scene()->addItem(item);
+
+    LabeledPoint labeledPoint(item, point);
+    labeledPoints.push_back(labeledPoint);
 
     Logger::instance().logMessage(Logger::Type::CHART,
                                   QStringLiteral("Labeled point: %1 at (%2, %3)")
                                   .arg(label)
                                   .arg(point.x())
                                   .arg(point.y()));
+}
+
+void Chart::updateLabeledPoints()
+{
+    for (LabeledPoint labeledPoint : labeledPoints)
+    {
+        QPointF point = labeledPoint.point;
+        QPointF pos = mapToPosition(point, m_smokeSeries);
+        labeledPoint.item->setPos(pos);
+    }
 }
 
 QVector<DataUnit> Chart::experimentData() const
@@ -207,14 +221,17 @@ QVector<DataUnit> Chart::experimentData() const
 
 void Chart::changeTimeAxisTicksFormat()
 {
-    bool timestampLessThan50 = (m_timeAxis->max() - m_timeAxis->min()) < 50;
-    m_timeAxis->setLabelFormat(timestampLessThan50 ? floatFormat : integerFormat);
+    bool axisLengthLessThan50 = (m_timeAxis->max() - m_timeAxis->min()) < 50;
+    m_timeAxis->setLabelFormat(axisLengthLessThan50 ? floatFormat : integerFormat);
 }
 
 double Chart::calculateTgA(int pointIndex, int sampleFrequency)
 {
-    QPointF startPoint = {m_experimentData[pointIndex - sampleFrequency * 2].timestamp,
-                          m_experimentData[pointIndex - sampleFrequency * 2].smokeValue};
+    int seconds = 2;
+    int samplesInSeconds = sampleFrequency * seconds;
+
+    QPointF startPoint = {m_experimentData[pointIndex - samplesInSeconds].timestamp,
+                          m_experimentData[pointIndex - samplesInSeconds].smokeValue};
 
     QPointF endPoint = {m_experimentData[pointIndex].timestamp,
                         m_experimentData[pointIndex].smokeValue};
@@ -222,6 +239,7 @@ double Chart::calculateTgA(int pointIndex, int sampleFrequency)
     QLineSeries series;
     series.append(startPoint);
     series.append(endPoint);
+
     bool ok;
     QPair<qreal, qreal> bestFit = series.bestFitLineEquation(ok);
     double tgA = bestFit.first;
@@ -259,15 +277,13 @@ double Chart::calculateAndPlotTgData(int pointIndex, int lengthInSeconds, int sa
 
 
         DataUnit startDataUnit = m_experimentData[pointIndex - lengthInSamples];
-        DataUnit firstMiddleDataUnit = m_experimentData[pointIndex -lengthInSamples * 2 / 3];
-        DataUnit secondMiddleDataUnit = m_experimentData[pointIndex - lengthInSamples / 3];
+        DataUnit middleDataUnit = m_experimentData[pointIndex - lengthInSamples  / 2];
 
         QPointF splineStartPos = {startDataUnit.timestamp, startDataUnit.smokeValue};
-        QPointF splineMiddle1Pos = {firstMiddleDataUnit.timestamp, firstMiddleDataUnit.smokeValue};
-        QPointF splineMiddle2Pos = {secondMiddleDataUnit.timestamp, secondMiddleDataUnit.smokeValue};
+        QPointF splineMiddlePos = {middleDataUnit.timestamp, middleDataUnit.smokeValue};
         QPointF splineEndPos = lineEndPos;
 
-        m_maxDiffSeries->append({splineStartPos, splineMiddle1Pos, splineMiddle2Pos, splineEndPos});
+        m_maxDiffSeries->append({splineStartPos, splineMiddlePos, splineEndPos});
         m_maxDiffSeries->show();
     }
 
@@ -308,33 +324,27 @@ void Chart::scrollRight()
 
 void Chart::zoomInChart()
 {
-    if (m_timeAxis->max() > initialTimeAxisValue + m_timeAxis->min() + 2)
+    // If size < 12
+    if (m_timeAxis->max() <= m_timeAxis->min() + initialTimeAxisValue + 2)
     {
-        m_timeAxis->setRange(m_timeAxis->min() + 1, m_timeAxis->max() - 1);
-        changeTimeAxisTicksFormat();
+        return;
     }
+
+    m_timeAxis->setRange(m_timeAxis->min() + 1, m_timeAxis->max() - 1);
+    changeTimeAxisTicksFormat();
 
     m_isStick = false;
     emit trackStateChanged(m_isStick);
 }
 
 void Chart::zoomOutChart()
-{
-    double left;
-    double right;
+{   
+    // Less than one -> 0, more than one -> -1
+    m_timeAxis->setMin(m_timeAxis->min() > 1 ? m_timeAxis->min() - 1 : 0);
 
-    if (m_timeAxis->max() < m_lastTimestamp)
-    {
-        left = m_timeAxis->min() > 1 ? m_timeAxis->min() - 1 : 0;
-        right = m_timeAxis->max() + 1;
-    }
-    else
-    {
-        left = (m_timeAxis->min() > 1) ? m_timeAxis->min() - 1 : 0;
-        right = m_timeAxis->max();
-    }
+    // More than timestamp -> nothing, less -> +1
+    m_timeAxis->setMax(m_timeAxis->max() < m_lastTimestamp ? m_timeAxis->max() + 1 : m_timeAxis->max());
 
-    m_timeAxis->setRange(left, right);
     changeTimeAxisTicksFormat();
 
     m_isStick = m_timeAxis->max() >= m_lastTimestamp;
