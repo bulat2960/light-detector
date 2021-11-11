@@ -91,7 +91,6 @@ void SettingsDialog::createPortElementsGrid()
     m_portNameLabel->setStyleSheet(QStringLiteral("QLabel { background-color: lightgray };"));
 
     m_connectionEstablishedLabel = new QLabel(this);
-    //m_connectionEstablishedLabel->setText(QStringLiteral("SH v200 28-03-2017"));
     m_connectionEstablishedLabel->setText(QStringLiteral("Соединение активно"));
     m_connectionEstablishedLabel->setStyleSheet(QStringLiteral("QLabel { background-color: lightgreen };"));
     m_connectionEstablishedLabel->hide();

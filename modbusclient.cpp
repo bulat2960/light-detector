@@ -9,6 +9,8 @@
 ModbusClient::ModbusClient(int requestsInSecond, QObject* parent)
     : QModbusRtuSerialClient(parent)
 {
+    assert(requestsInSecond != 0);
+
     m_requestTimer = new QTimer(this);
     m_requestTimer->setSingleShot(false);
     m_requestTimer->setInterval(1000 / requestsInSecond);

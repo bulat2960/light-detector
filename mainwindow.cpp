@@ -221,6 +221,7 @@ void MainWindow::startExperiment(double calibrationValue)
         m_startExperimentButton->setEnabled(false);
         m_stopExperimentAction->setEnabled(true);
         m_calibrationAction->setEnabled(false);
+        m_loggingAction->setEnabled(false);
         m_startExperimentButton->setText(QStringLiteral("В процессе"));
 
         Logger::instance().logMessage(Logger::Type::EXPERIMENT,
@@ -343,25 +344,18 @@ void MainWindow::generatePdf()
     box.setText(QStringLiteral("Ожидайте, производится создание протокола..."));
     box.setStandardButtons(QMessageBox::NoButton);
 
-    QTimer::singleShot(1000, this, [this] {
-        QString protocolsFolderPath = getProtocolsFolder();
+    QThread* thread = new QThread(this);
+
+    QTimer::singleShot(1000, this, [this, thread] {
         m_creator.setGraph(m_chartView->grab());
+        QString protocolsFolderPath = getProtocolsFolder();
         m_creator.setProtocolPath(protocolsFolderPath);
-        m_creator.createProtocol(); // TODO: Rework
+
+        m_creator.moveToThread(thread);
+        thread->start();
     });
 
-    /*QTimer* timer = new QTimer(this);
-    timer->setSingleShot(true);
-    timer->setInterval(1000);
-    connect(timer, &QTimer::timeout, this, [this] {
-        QString protocolsFolderPath = getProtocolsFolder();
-        m_creator.setGraph(m_chartView->grab());
-        m_creator.setProtocolPath(protocolsFolderPath);
-        m_creator.createProtocol();
-    });*/
-
-    QThread* thread = new QThread(this);
-    m_creator.moveToThread(thread);
+    connect(thread, &QThread::started, &m_creator, &ProtocolCreator::createProtocol);
     connect(&m_creator, &ProtocolCreator::created, &box, &QMessageBox::accept);
     connect(&m_creator, &ProtocolCreator::created, thread, [thread, this] {
         thread->quit();
@@ -370,7 +364,6 @@ void MainWindow::generatePdf()
         m_startExperimentButton->setText(QStringLiteral("Завершено"));
     });
 
-    thread->start();
     box.exec();
 }
 

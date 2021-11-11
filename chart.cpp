@@ -277,7 +277,7 @@ double Chart::calculateAndPlotTgData(int pointIndex, int lengthInSeconds, int sa
 
 
         DataUnit startDataUnit = m_experimentData[pointIndex - lengthInSamples];
-        DataUnit middleDataUnit = m_experimentData[pointIndex - lengthInSamples  / 2];
+        DataUnit middleDataUnit = m_experimentData[pointIndex - lengthInSamples / 2];
 
         QPointF splineStartPos = {startDataUnit.timestamp, startDataUnit.smokeValue};
         QPointF splineMiddlePos = {middleDataUnit.timestamp, middleDataUnit.smokeValue};

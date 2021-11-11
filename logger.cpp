@@ -20,11 +20,13 @@ Logger::Logger()
 
     m_dataStream.setDevice(&m_logFile);
 
-    m_types.insert(Type::MODBUS,     "MODBUS:    ");
-    m_types.insert(Type::CALCULATOR, "CALCULATOR:");
-    m_types.insert(Type::CHART,      "CHART:     ");
-    m_types.insert(Type::PROTOCOL,   "PROTOCOL:  ");
-    m_types.insert(Type::EXPERIMENT, "EXPERIMENT:");
+    m_types = {
+        {Type::MODBUS,     "MODBUS:    "},
+        {Type::CALCULATOR, "CALCULATOR:"},
+        {Type::CHART,      "CHART:     "},
+        {Type::PROTOCOL,   "PROTOCOL:  "},
+        {Type::EXPERIMENT, "EXPERIMENT:"}
+    };
 }
 
 void Logger::setLoggingEnabled(bool enabled)

@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
     w.setMinimumSize(screenSize * 0.75);
     w.showMaximized();
 
+    // TODO: Add validators
 
     return a.exec();
 }
