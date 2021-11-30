@@ -23,16 +23,16 @@ private:
 
     QVBoxLayout* m_layout {nullptr};
 
-    QLineEdit* m_nameEdit {nullptr};
-    QLineEdit* m_brandEdit {nullptr};
-    QLineEdit* m_providerEdit {nullptr};
-    QLineEdit* m_thicknessEdit {nullptr};
+    QLineEdit* m_materialBrandEdit {nullptr};
+    QLineEdit* m_batchNumberEdit {nullptr};
+    QLineEdit* m_recipeEdit {nullptr};
+    QLineEdit* m_weightAndThicknessEdit {nullptr};
 
-    QLineEdit* m_protocolNumberEdit {nullptr};
+    QLineEdit* m_testSeriesNumberEdit {nullptr};
     QLineEdit* m_densityEdit {nullptr};
-    QLineEdit* m_fioEdit {nullptr};
-    QLineEdit* m_samplesNumberEdit {nullptr};
-    QLineEdit* m_conditioningEdit {nullptr};
+    QComboBox* m_sampleTypeBox {nullptr};
+    QLineEdit* m_firstNoteEdit {nullptr};
+    QLineEdit* m_secondNoteEdit {nullptr};
     QComboBox* m_regimeBox {nullptr};
 
     void setupTemplateLayout();

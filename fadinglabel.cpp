@@ -12,16 +12,13 @@ FadingLabel::FadingLabel(const QString &firstStateText, const QString &secondSta
 
     m_timer = new QTimer(this);
     m_timer->setSingleShot(true);
-    m_timer->setInterval(500);
 
     m_animHide = new QPropertyAnimation(m_opacityEffect, "opacity");
-    m_animHide->setDuration(500);
     m_animHide->setStartValue(1.0);
     m_animHide->setEndValue(0.0);
     m_animHide->setEasingCurve(QEasingCurve::OutQuad);
 
     m_animShow = new QPropertyAnimation(m_opacityEffect, "opacity");
-    m_animShow->setDuration(500);
     m_animShow->setStartValue(0.0);
     m_animShow->setEndValue(1.0);
     m_animShow->setEasingCurve(QEasingCurve::InQuad);
@@ -31,6 +28,31 @@ FadingLabel::FadingLabel(const QString &firstStateText, const QString &secondSta
     {
         m_animHide->start();
     });
+
+    setAnimationDuration(500);
+}
+
+void FadingLabel::startCycled()
+{
+    connect(m_animHide, &QPropertyAnimation::finished, this, [this] {
+        changeState(not m_currentState);
+        m_animShow->start();
+    });
+
+    m_animShow->start();
+    changeState(not m_currentState);
+}
+
+void FadingLabel::setAnimationDuration(int duration)
+{
+    m_timer->setInterval(duration);
+    m_animShow->setDuration(duration);
+    m_animHide->setDuration(duration);
+}
+
+bool FadingLabel::state() const
+{
+    return m_currentState;
 }
 
 void FadingLabel::changeState(bool state)

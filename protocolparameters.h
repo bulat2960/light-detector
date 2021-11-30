@@ -5,17 +5,17 @@
 
 struct ProtocolParameters
 {
-    QString name {"-"};
-    QString brand {"-"};
-    QString provider {"-"};
-    double thickness {0};
+    QString materialBrand;
+    QString batchNumber;
+    QString recipe;
+    QString weightAndThickness;
 
-    int protocolNumber {0};
-    double density {0};
-    QString fio {"-"};
-    int samplesNumber {0};
-    QString conditioning {"-"};
-    QString regime {"-"};
+    QString testSeriesNumber;
+    QString density;
+    QString sampleType;
+    QString firstNote;
+    QString secondNote;
+    QString regime;
 
     double dMax {0};
     double dt2 {0};

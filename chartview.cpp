@@ -15,19 +15,12 @@ ChartView::ChartView(Chart *chart, QWidget *parent)
                                         QStringLiteral("Режим отслеживания выключен"),
                                         this);
 
-    QFont trackStateLabelFont = m_trackStateLabel->font();
-    trackStateLabelFont.setBold(true);
-    trackStateLabelFont.setPixelSize(14);
-    m_trackStateLabel->setFont(trackStateLabelFont);
-
     m_lightValueLabel = new QLabel("I = None", this);
     m_smokeValueLabel = new QLabel("Dуд = None", this);
 
-    QFont dataLabelFont;
-    dataLabelFont.setPixelSize(14);
-    dataLabelFont.setBold(true);
-    m_lightValueLabel->setFont(dataLabelFont);
-    m_smokeValueLabel->setFont(dataLabelFont);
+    m_trackStateLabel->setStyleSheet("QLabel {font-size: 14px; font-weight: bold; }");
+    m_lightValueLabel->setStyleSheet("QLabel {font-size: 14px; font-weight: bold; }");
+    m_smokeValueLabel->setStyleSheet("QLabel {font-size: 14px; font-weight: bold; }");
 }
 
 void ChartView::changeDataLabels(double lightValue, double smokeValue)

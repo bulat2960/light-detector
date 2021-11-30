@@ -16,7 +16,7 @@ class Chart : public QChart
     Q_OBJECT
 
 public:
-    Chart();
+    Chart(int samplesAfterReachMaxSmokeToNotify);
 
     void scrollLeft();
     void scrollRight();
@@ -37,6 +37,7 @@ public:
 signals:
     void trackStateChanged(bool state);
     void dataChanged(double lightValue, double smokeValue);
+    void maxSmokeReached();
 
 public slots:
     void addPoint(double x, double y);
@@ -48,6 +49,11 @@ private:
     double m_lastLightValue {0.0};
     double m_lastSmokeValue {0.0};
     double m_maxLightValue{0.0};
+
+    const int m_samplesAfterReachMaxSmokeToNotify;
+    double m_maxReachedSmokeValue {0.0};
+    int m_currentSamplesFromMaxSmoke {0};
+    bool m_maxSmokeReached {false};
 
     QVector<DataUnit> m_experimentData;
 
@@ -76,6 +82,8 @@ private:
 
     void setupTitle();
     void setupAxes();
+
+    void checkIfMaxSmokeReached(double normalizedLightValue, double smokeValue);
 
     void changeTimeAxisTicksFormat();
 

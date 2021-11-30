@@ -62,8 +62,8 @@ private:
     QAction* m_archiveAction {nullptr};
     QAction* m_calibrationAction {nullptr};
     QAction* m_aboutProgramAction {nullptr};
+    FadingLabel* m_maxSmokeNotifyLabel {nullptr};
     QAction* m_loggingAction {nullptr};
-    QAction* m_exitProgramAction {nullptr};
 
     ChartView* m_chartView {nullptr};
     Chart* m_chart {nullptr};

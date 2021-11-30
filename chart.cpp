@@ -20,7 +20,9 @@ static const QString floatFormat = "%.1f";
 
 static const int initialTimeAxisValue = 10;
 
-Chart::Chart()
+static const int startSmokeCheckingLightValue = 80;
+
+Chart::Chart(int samplesAfterReachMaxSmokeToNotify) : m_samplesAfterReachMaxSmokeToNotify(samplesAfterReachMaxSmokeToNotify)
 {   
     setDropShadowEnabled(false);
 
@@ -174,11 +176,38 @@ void Chart::addPoint(double x, double y)
 
     emit dataChanged(normalizedLightValue, smokeValue);
 
+    checkIfMaxSmokeReached(normalizedLightValue, smokeValue);
+
     Logger::instance().logMessage(Logger::Type::CHART,
                                   QStringLiteral("Time: %1, Light: %2%, Smoke: %3")
                                   .arg(x)
                                   .arg(normalizedLightValue)
                                   .arg(smokeValue));
+}
+
+void Chart::checkIfMaxSmokeReached(double normalizedLightValue, double smokeValue)
+{
+    if (m_maxSmokeReached or normalizedLightValue > startSmokeCheckingLightValue)
+    {
+        return;
+    }
+
+    if (smokeValue > m_maxReachedSmokeValue)
+    {
+        m_maxReachedSmokeValue = smokeValue;
+        m_currentSamplesFromMaxSmoke = 0;
+    }
+    else
+    {
+        m_currentSamplesFromMaxSmoke += 1;
+
+        if (m_currentSamplesFromMaxSmoke == m_samplesAfterReachMaxSmokeToNotify)
+        {
+            m_maxSmokeReached = true;
+            emit maxSmokeReached();
+
+        }
+    }
 }
 
 void Chart::addLabeledPoint(QPointF point, const QString& label)

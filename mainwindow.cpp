@@ -15,11 +15,15 @@
 
 static const int samplingFrequency = 5;
 static const int tgLineLengthInSeconds = 40;
+static const int secondsAfterReachMaxSmokeToNotify = 5;
 
 MainWindow::MainWindow(QSize screenSize, QWidget *parent)
     : QWidget(parent)
 {
-    m_chart = new Chart();
+    const int samplesAfterReachMaxSmokeToNotify = secondsAfterReachMaxSmokeToNotify * samplingFrequency;
+
+    m_chart = new Chart(samplesAfterReachMaxSmokeToNotify);
+
     m_chart->legend()->detachFromChart();
     m_chart->legend()->setGeometry(QRectF(screenSize.width() - 250, 0, 250, 500));
 
@@ -107,17 +111,18 @@ void MainWindow::createToolBar()
     m_aboutProgramAction->setToolTip(QStringLiteral("О программе"));
     connect(m_aboutProgramAction, &QAction::triggered, this, &MainWindow::showInfoAboutProgram);
 
-    QWidget* spacerWidget = new QWidget(this);
-    spacerWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    spacerWidget->setVisible(true);
+    m_maxSmokeNotifyLabel = new FadingLabel(QStringLiteral("Достигнуто максимальное значение плотности дыма."),
+                                            QStringLiteral("Можно завершать работу программы."), this);
+    m_maxSmokeNotifyLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    m_maxSmokeNotifyLabel->setAlignment(Qt::AlignCenter);
+    m_maxSmokeNotifyLabel->setStyleSheet("QLabel {font-size: 15pt; }");
+    m_maxSmokeNotifyLabel->setAnimationDuration(1000);
+    m_maxSmokeNotifyLabel->setVisible(true);
+    connect(m_chart, &Chart::maxSmokeReached, m_maxSmokeNotifyLabel, &FadingLabel::startCycled);
 
     m_loggingAction = new QAction(QIcon(":/images/log-disabled.png"), QStringLiteral("Лог выкл."));
     m_loggingAction->setToolTip(QStringLiteral("Включить запись логирования"));
     connect(m_loggingAction, &QAction::triggered, this, &MainWindow::toggleLogging);
-
-    m_exitProgramAction = new QAction(QIcon(":/images/exit.png"), QStringLiteral("Выход"), this);
-    m_exitProgramAction->setToolTip(QStringLiteral("Закрыть программу"));
-    connect(m_exitProgramAction, &QAction::triggered, this, &MainWindow::close);
 
     m_toolBar->addSeparator();
     m_toolBar->addAction(m_connectAction);
@@ -132,11 +137,9 @@ void MainWindow::createToolBar()
     m_toolBar->addSeparator();
     m_toolBar->addAction(m_aboutProgramAction);
     m_toolBar->addSeparator();
-    m_toolBar->addWidget(spacerWidget);
+    m_toolBar->addWidget(m_maxSmokeNotifyLabel);
     m_toolBar->addSeparator();
     m_toolBar->addAction(m_loggingAction);
-    m_toolBar->addSeparator();
-    m_toolBar->addAction(m_exitProgramAction);
     m_toolBar->addSeparator();
 
     m_mainLayout->addWidget(m_toolBar);

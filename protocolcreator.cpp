@@ -30,18 +30,19 @@ QString ProtocolCreator::convertTemplateToHtml(const QString &templateFilename)
     QDateTime currentDateTime = QDateTime::currentDateTime();
     QString currentDateTimeString = QLocale::system().toString(currentDateTime, QStringLiteral("ddd MMM yyyy hh:mm:ss"));
 
-    resultHtml = resultHtml.arg(m_protocolParameters.protocolNumber);
+    resultHtml = resultHtml.arg(m_protocolParameters.testSeriesNumber);
     resultHtml = resultHtml.arg(currentDateTimeString);
 
-    resultHtml = resultHtml.arg(m_protocolParameters.name);
-    resultHtml = resultHtml.arg(m_protocolParameters.brand);
-    resultHtml = resultHtml.arg(m_protocolParameters.thickness);
-    resultHtml = resultHtml.arg(m_protocolParameters.provider);
+    resultHtml = resultHtml.arg(m_protocolParameters.materialBrand);
+    resultHtml = resultHtml.arg(m_protocolParameters.batchNumber);
+    resultHtml = resultHtml.arg(m_protocolParameters.weightAndThickness);
+    resultHtml = resultHtml.arg(m_protocolParameters.recipe);
+    resultHtml = resultHtml.arg(m_protocolParameters.sampleType);
 
-    resultHtml = resultHtml.arg(m_protocolParameters.conditioning);
     resultHtml = resultHtml.arg(m_protocolParameters.regime);
     resultHtml = resultHtml.arg(m_protocolParameters.density);
-    resultHtml = resultHtml.arg(m_protocolParameters.samplesNumber);
+    resultHtml = resultHtml.arg(m_protocolParameters.firstNote);
+    resultHtml = resultHtml.arg(m_protocolParameters.secondNote);
 
     resultHtml = resultHtml.arg(m_calculatedParameters.dMax);
     resultHtml = resultHtml.arg(m_calculatedParameters.dt2);
@@ -50,8 +51,6 @@ QString ProtocolCreator::convertTemplateToHtml(const QString &templateFilename)
     resultHtml = resultHtml.arg(m_tgA);
     resultHtml = resultHtml.arg(m_calculatedParameters.Kcp);
     resultHtml = resultHtml.arg(m_calculatedParameters.Unp);
-
-    resultHtml = resultHtml.arg(m_protocolParameters.fio);
 
     return resultHtml;
 }
@@ -89,9 +88,19 @@ void ProtocolCreator::createProtocol()
     QElapsedTimer timer;
     timer.start();
 
+    QDateTime currentDateTime = QDateTime::currentDateTime();
+    QString currentDateTimeString = currentDateTime.toString(QStringLiteral("dd-MM-yyyy"));
+
+    QString protocolName = QStringLiteral("%1_%2_%3_%4.pdf").arg(currentDateTimeString)
+                                                        .arg(m_protocolParameters.materialBrand)
+                                                        .arg(m_protocolParameters.batchNumber)
+                                                        .arg(m_protocolParameters.testSeriesNumber);
+
+    QString protocolPath = QStringLiteral("%1/%2").arg(m_path).arg(protocolName);
+
     QPrinter printer(QPrinter::HighResolution);
     printer.setPrinterName("Microsoft Print to PDF");
-    printer.setOutputFileName(m_path + QStringLiteral("/protocol-%1.pdf").arg(m_protocolParameters.protocolNumber));
+    printer.setOutputFileName(protocolPath);
     printer.setOutputFormat(QPrinter::PdfFormat);
     printer.setPageSize(QPageSize::A4);
     printer.setPageOrientation(QPageLayout::Portrait);

@@ -12,6 +12,11 @@ public:
     FadingLabel(const QString& firstStateText, const QString& secondStateText, QWidget* parent = nullptr);
 
     void changeState(bool state);
+    bool state() const;
+
+    void setAnimationDuration(int duration);
+
+    void startCycled();
 
 private:
     QTimer* m_timer {nullptr};

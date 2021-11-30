@@ -8,7 +8,6 @@
         <file>images/stop.png</file>
         <file>images/processing.gif</file>
         <file>templates/procotol.html</file>
-        <file>images/exit.png</file>
         <file>images/log-disabled.png</file>
         <file>images/log-enabled.png</file>
     </qresource>
