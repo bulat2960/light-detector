@@ -12,7 +12,7 @@
 
 #include "chart.h"
 #include "chartview.h"
-#include "settingsdialog.h"
+#include "connectionsettingsdialog.h"
 #include "modbusclient.h"
 #include "protocolcreator.h"
 
@@ -31,8 +31,9 @@ private slots:
     void calibrate();
     void showInfoAboutProgram();
     void startExperiment(double calibrationValue);
-    void openSettings();
+    void openConnectionSettings();
     void toggleLogging();
+    void openProgramSettings();
 
     void preparePdfGenerating();
     void generatePdf();
@@ -63,6 +64,7 @@ private:
     QAction* m_calibrationAction {nullptr};
     QAction* m_aboutProgramAction {nullptr};
     FadingLabel* m_maxSmokeNotifyLabel {nullptr};
+    QAction* m_settingsAction {nullptr};
     QAction* m_loggingAction {nullptr};
 
     ChartView* m_chartView {nullptr};

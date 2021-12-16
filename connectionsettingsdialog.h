@@ -1,5 +1,5 @@
-#ifndef SETTINGSDIALOG_H
-#define SETTINGSDIALOG_H
+#ifndef CONNECTIONSETTINGSDIALOG_H
+#define CONNECTIONSETTINGSDIALOG_H
 
 #include <QDialog>
 #include <QComboBox>
@@ -10,10 +10,10 @@
 
 #include "modbusclient.h"
 
-class SettingsDialog : public QDialog
+class ConnectionSettingsDialog : public QDialog
 {
 public:
-    SettingsDialog(ModbusClient* client, QWidget* parent = 0);
+    ConnectionSettingsDialog(ModbusClient* client, QWidget* parent = 0);
 
 private slots:
     void scanExistingPorts();
@@ -52,4 +52,4 @@ private:
     void changeBaudRates();
 };
 
-#endif // SETTINGSDIALOG_H
+#endif // CONNECTIONSETTINGSDIALOG_H

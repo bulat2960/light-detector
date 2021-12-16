@@ -22,7 +22,7 @@ static const int initialTimeAxisValue = 10;
 
 static const int startSmokeCheckingLightValue = 80;
 
-Chart::Chart(int samplesAfterReachMaxSmokeToNotify) : m_samplesAfterReachMaxSmokeToNotify(samplesAfterReachMaxSmokeToNotify)
+Chart::Chart()
 {   
     setDropShadowEnabled(false);
 
@@ -58,6 +58,16 @@ Chart::Chart(int samplesAfterReachMaxSmokeToNotify) : m_samplesAfterReachMaxSmok
 
     setupAxes();
     setupTitle();
+}
+
+void Chart::setSamplesAfterReachMaxSmokeToNotify(int samples)
+{
+    m_samplesAfterReachMaxSmokeToNotify = samples;
+}
+
+int Chart::samplesAfterReachMaxSmokeToNotify() const
+{
+    return m_samplesAfterReachMaxSmokeToNotify;
 }
 
 void Chart::setupTitle()

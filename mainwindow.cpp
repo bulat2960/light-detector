@@ -12,24 +12,22 @@
 #include "startexperimentdialog.h"
 #include "parameterscalculator.h"
 #include "logger.h"
+#include "programsettingsdialog.h"
 
 static const int samplingFrequency = 5;
 static const int tgLineLengthInSeconds = 40;
-static const int secondsAfterReachMaxSmokeToNotify = 5;
 
 MainWindow::MainWindow(QSize screenSize, QWidget *parent)
     : QWidget(parent)
 {
-    const int samplesAfterReachMaxSmokeToNotify = secondsAfterReachMaxSmokeToNotify * samplingFrequency;
-
-    m_chart = new Chart(samplesAfterReachMaxSmokeToNotify);
+    m_chart = new Chart;
 
     m_chart->legend()->detachFromChart();
     m_chart->legend()->setGeometry(QRectF(screenSize.width() - 250, 0, 250, 500));
 
     m_chartView = new ChartView(m_chart, this);
     m_chartView->setTrackStateLabelGeometry(QRect(screenSize.width() - 270, screenSize.height() - 200, 270, 100));
-    m_chartView->setDataLabelsGeometry(screenSize.width() - 350, 10);
+    m_chartView->setDataLabelsGeometry(screenSize.width() - 370, 10);
 
     m_client = new ModbusClient(samplingFrequency, this);
     connect(m_client, &ModbusClient::dataParsed, this, &MainWindow::addPointToChart);
@@ -45,13 +43,13 @@ void MainWindow::resizeEvent(QResizeEvent* event)
     m_chart->legend()->setGeometry(QRectF(size().width() - 250, 0, 250, 500));
     m_chart->updateLabeledPoints();
     m_chartView->setTrackStateLabelGeometry(QRect(size().width() - 270, size().height() - 200, 270, 100));
-    m_chartView->setDataLabelsGeometry(size().width() - 350, 10);
+    m_chartView->setDataLabelsGeometry(size().width() - 370, 10);
     QWidget::resizeEvent(event);
 }
 
-void MainWindow::openSettings()
+void MainWindow::openConnectionSettings()
 {
-    SettingsDialog dialog(m_client);
+    ConnectionSettingsDialog dialog(m_client);
     int code = dialog.exec();
 
     if (code == QDialog::Rejected)
@@ -77,7 +75,7 @@ void MainWindow::createToolBar()
 
     m_connectAction = new QAction(QIcon(":/images/connect.png"), QStringLiteral("Подключение"), this);
     m_connectAction->setToolTip(QStringLiteral("Подключиться к COM-порту"));
-    connect(m_connectAction, &QAction::triggered, this, &MainWindow::openSettings);
+    connect(m_connectAction, &QAction::triggered, this, &MainWindow::openConnectionSettings);
 
     m_startExperimentButton = new QToolButton(this);
     m_startExperimentButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
@@ -113,12 +111,17 @@ void MainWindow::createToolBar()
 
     m_maxSmokeNotifyLabel = new FadingLabel(QStringLiteral("Достигнуто максимальное значение плотности дыма."),
                                             QStringLiteral("Можно завершать работу программы."), this);
+    m_maxSmokeNotifyLabel->setWordWrap(true);
     m_maxSmokeNotifyLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     m_maxSmokeNotifyLabel->setAlignment(Qt::AlignCenter);
     m_maxSmokeNotifyLabel->setStyleSheet("QLabel {font-size: 15pt; }");
     m_maxSmokeNotifyLabel->setAnimationDuration(1000);
     m_maxSmokeNotifyLabel->setVisible(true);
     connect(m_chart, &Chart::maxSmokeReached, m_maxSmokeNotifyLabel, &FadingLabel::startCycled);
+
+    m_settingsAction = new QAction(QIcon(":/images/settings.png"), QStringLiteral("Настройки"));
+    m_settingsAction->setToolTip(QStringLiteral("Открыть настройки"));
+    connect(m_settingsAction, &QAction::triggered, this, &MainWindow::openProgramSettings);
 
     m_loggingAction = new QAction(QIcon(":/images/log-disabled.png"), QStringLiteral("Лог выкл."));
     m_loggingAction->setToolTip(QStringLiteral("Включить запись логирования"));
@@ -139,10 +142,26 @@ void MainWindow::createToolBar()
     m_toolBar->addSeparator();
     m_toolBar->addWidget(m_maxSmokeNotifyLabel);
     m_toolBar->addSeparator();
+    m_toolBar->addAction(m_settingsAction);
+    m_toolBar->addSeparator();
     m_toolBar->addAction(m_loggingAction);
     m_toolBar->addSeparator();
 
     m_mainLayout->addWidget(m_toolBar);
+}
+
+void MainWindow::openProgramSettings()
+{
+    ProgramSettingsDialog dialog(m_chart->samplesAfterReachMaxSmokeToNotify(), this);
+    int code = dialog.exec();
+
+    if (code == QDialog::Rejected)
+    {
+        return;
+    }
+
+    int maxSmokeTrackingDelaySeconds = dialog.getMaxSmokeTrackingDelaySeconds();
+    m_chart->setSamplesAfterReachMaxSmokeToNotify(maxSmokeTrackingDelaySeconds * samplingFrequency);
 }
 
 void MainWindow::toggleLogging()
@@ -225,6 +244,7 @@ void MainWindow::startExperiment(double calibrationValue)
         m_stopExperimentAction->setEnabled(true);
         m_calibrationAction->setEnabled(false);
         m_loggingAction->setEnabled(false);
+        m_settingsAction->setEnabled(false);
         m_startExperimentButton->setText(QStringLiteral("В процессе"));
 
         Logger::instance().logMessage(Logger::Type::EXPERIMENT,

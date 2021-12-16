@@ -16,7 +16,10 @@ class Chart : public QChart
     Q_OBJECT
 
 public:
-    Chart(int samplesAfterReachMaxSmokeToNotify);
+    Chart();
+
+    void setSamplesAfterReachMaxSmokeToNotify(int samples);
+    int samplesAfterReachMaxSmokeToNotify() const;
 
     void scrollLeft();
     void scrollRight();
@@ -50,7 +53,7 @@ private:
     double m_lastSmokeValue {0.0};
     double m_maxLightValue{0.0};
 
-    const int m_samplesAfterReachMaxSmokeToNotify;
+    int m_samplesAfterReachMaxSmokeToNotify {300};
     double m_maxReachedSmokeValue {0.0};
     int m_currentSamplesFromMaxSmoke {0};
     bool m_maxSmokeReached {false};

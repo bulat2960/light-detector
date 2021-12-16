@@ -19,8 +19,8 @@ ChartView::ChartView(Chart *chart, QWidget *parent)
     m_smokeValueLabel = new QLabel("Dуд = None", this);
 
     m_trackStateLabel->setStyleSheet("QLabel {font-size: 14px; font-weight: bold; }");
-    m_lightValueLabel->setStyleSheet("QLabel {font-size: 14px; font-weight: bold; }");
-    m_smokeValueLabel->setStyleSheet("QLabel {font-size: 14px; font-weight: bold; }");
+    m_lightValueLabel->setStyleSheet("QLabel {font-size: 18px; font-weight: bold; }");
+    m_smokeValueLabel->setStyleSheet("QLabel {font-size: 18px; font-weight: bold; }");
 }
 
 void ChartView::changeDataLabels(double lightValue, double smokeValue)
@@ -41,8 +41,8 @@ void ChartView::setTrackStateLabelGeometry(const QRect& geometry)
 
 void ChartView::setDataLabelsGeometry(int left, int top)
 {
-    m_lightValueLabel->setGeometry(left, top, 100, 25);
-    m_smokeValueLabel->setGeometry(left, top + 25, 100, 25);
+    m_lightValueLabel->setGeometry(left, top, 150, 25);
+    m_smokeValueLabel->setGeometry(left, top + 25, 150, 25);
 }
 
 void ChartView::hideLabels()

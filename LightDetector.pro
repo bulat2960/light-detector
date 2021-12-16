@@ -11,6 +11,7 @@ CONFIG += c++11
 SOURCES += \
     chart.cpp \
     chartview.cpp \
+    connectionsettingsdialog.cpp \
     fadinglabel.cpp \
     logger.cpp \
     main.cpp \
@@ -18,14 +19,15 @@ SOURCES += \
     modbusclient.cpp \
     parameterscalculator.cpp \
     pointlabelitem.cpp \
+    programsettingsdialog.cpp \
     protocolcreator.cpp \
-    settingsdialog.cpp \
     startexperimentdialog.cpp
 
 HEADERS += \
     calculatedparameters.h \
     chart.h \
     chartview.h \
+    connectionsettingsdialog.h \
     dataunit.h \
     fadinglabel.h \
     logger.h \
@@ -33,9 +35,9 @@ HEADERS += \
     modbusclient.h \
     parameterscalculator.h \
     pointlabelitem.h \
+    programsettingsdialog.h \
     protocolcreator.h \
     protocolparameters.h \
-    settingsdialog.h \
     startexperimentdialog.h
 
 # Default rules for deployment.

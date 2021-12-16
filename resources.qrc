@@ -10,5 +10,6 @@
         <file>templates/procotol.html</file>
         <file>images/log-disabled.png</file>
         <file>images/log-enabled.png</file>
+        <file>images/settings.png</file>
     </qresource>
 </RCC>

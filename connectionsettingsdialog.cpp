@@ -1,4 +1,4 @@
-#include "settingsdialog.h"
+#include "connectionsettingsdialog.h"
 
 #include <QGridLayout>
 #include <QLabel>
@@ -7,7 +7,7 @@
 #include <QTimer>
 #include <QSerialPort>
 
-SettingsDialog::SettingsDialog(ModbusClient* client, QWidget *parent)
+ConnectionSettingsDialog::ConnectionSettingsDialog(ModbusClient* client, QWidget *parent)
     : QDialog(parent),
       m_client(client)
 {
@@ -20,7 +20,7 @@ SettingsDialog::SettingsDialog(ModbusClient* client, QWidget *parent)
     createPortElementsGrid();
     createDialogButtonsLayout();
 
-    QTimer::singleShot(100, this, &SettingsDialog::scanExistingPorts);
+    QTimer::singleShot(100, this, &ConnectionSettingsDialog::scanExistingPorts);
 
     if (m_client->state() == QModbusDevice::ConnectedState)
     {
@@ -28,10 +28,10 @@ SettingsDialog::SettingsDialog(ModbusClient* client, QWidget *parent)
     }
 }
 
-void SettingsDialog::createDataElementsGrid()
+void ConnectionSettingsDialog::createDataElementsGrid()
 {
     m_portBox = new QComboBox(this);
-    connect(m_portBox, &QComboBox::currentIndexChanged, this, &SettingsDialog::changeBaudRates);
+    connect(m_portBox, &QComboBox::currentIndexChanged, this, &ConnectionSettingsDialog::changeBaudRates);
 
     m_baudRateBox = new QComboBox(this);
 
@@ -79,12 +79,12 @@ void SettingsDialog::createDataElementsGrid()
     m_mainLayout->addLayout(dataLayout);
 }
 
-void SettingsDialog::createPortElementsGrid()
+void ConnectionSettingsDialog::createPortElementsGrid()
 {
     m_checkConnectionButton = new QPushButton("Проверка связи", this);
     m_checkConnectionButton->setDisabled(true);
     connect(m_checkConnectionButton, &QPushButton::clicked, m_client, &ModbusClient::sendDeviceStateRequest);
-    connect(m_client, &ModbusClient::connectionEstablished, this, &SettingsDialog::onConnectionEstablished);
+    connect(m_client, &ModbusClient::connectionEstablished, this, &ConnectionSettingsDialog::onConnectionEstablished);
 
     m_portNameLabel = new QLabel(this);
     m_portNameLabel->setText(QStringLiteral("Порт закрыт"));
@@ -124,14 +124,14 @@ void SettingsDialog::createPortElementsGrid()
     m_mainLayout->addLayout(portLayout);
 }
 
-void SettingsDialog::createDialogButtonsLayout()
+void ConnectionSettingsDialog::createDialogButtonsLayout()
 {
     m_acceptButton = new QPushButton("Применить");
     m_acceptButton->setEnabled(false);
-    connect(m_acceptButton, &QPushButton::clicked, this, &SettingsDialog::accept);
+    connect(m_acceptButton, &QPushButton::clicked, this, &ConnectionSettingsDialog::accept);
 
     m_rejectButton = new QPushButton("Закрыть");
-    connect(m_rejectButton, &QPushButton::clicked, this, &SettingsDialog::reject);
+    connect(m_rejectButton, &QPushButton::clicked, this, &ConnectionSettingsDialog::reject);
 
     QHBoxLayout* dialogButtonsLayout = new QHBoxLayout;
     dialogButtonsLayout->addWidget(m_acceptButton);
@@ -141,7 +141,7 @@ void SettingsDialog::createDialogButtonsLayout()
     m_mainLayout->addLayout(dialogButtonsLayout);
 }
 
-void SettingsDialog::openPort()
+void ConnectionSettingsDialog::openPort()
 {
     QMap<QString, int> parityMap =
     {
@@ -191,7 +191,7 @@ void SettingsDialog::openPort()
     m_acceptButton->setEnabled(true);
 }
 
-void SettingsDialog::scanExistingPorts()
+void ConnectionSettingsDialog::scanExistingPorts()
 {
     QSerialPortInfo info;
     QList<QSerialPortInfo> availablePorts = info.availablePorts();
@@ -214,13 +214,13 @@ void SettingsDialog::scanExistingPorts()
     changeBaudRates();
 }
 
-void SettingsDialog::onConnectionEstablished()
+void ConnectionSettingsDialog::onConnectionEstablished()
 {
     m_checkConnectionButton->setEnabled(false);
     m_connectionEstablishedLabel->show();
 }
 
-void SettingsDialog::changeBaudRates()
+void ConnectionSettingsDialog::changeBaudRates()
 {
     QList<int> baudRatesList = portBaudRates[m_portBox->currentText()];
 
