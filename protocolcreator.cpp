@@ -98,7 +98,7 @@ void ProtocolCreator::createProtocol()
 
     QString protocolPath = QStringLiteral("%1/%2").arg(m_path).arg(protocolName);
 
-    QPrinter printer(QPrinter::HighResolution);
+    /*QPrinter printer(QPrinter::HighResolution);
     printer.setPrinterName("Microsoft Print to PDF");
     printer.setOutputFileName(protocolPath);
     printer.setOutputFormat(QPrinter::PdfFormat);
@@ -127,7 +127,40 @@ void ProtocolCreator::createProtocol()
 
     cursor.insertImage(image);
 
+    doc.print(&printer);*/
+
+
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setPrinterName("Microsoft Print to PDF");
+    printer.setOutputFileName(protocolPath);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setPageSize(QPageSize::A4);
+    printer.setPageOrientation(QPageLayout::Landscape);
+    QSizeF pageSize = printer.pageRect(QPrinter::Unit::DevicePixel).size();
+
+    QTextDocument doc;
+    doc.setPageSize(pageSize);
+    doc.setDefaultFont(QFont("Sans Serif", 120));
+
+    QString htmlString = convertTemplateToHtml(":/templates/procotol.html");
+
+    QTextCursor cursor(&doc);
+    cursor.insertHtml(htmlString);
+
+    QImage image = m_graph.toImage();
+    image = image.scaled(1360, 910, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    image.setDevicePixelRatio(0.1);
+
+    QTransform transform;
+    //transform.rotate(180);
+    image = image.transformed(transform, Qt::TransformationMode::SmoothTransformation);
+
+    cursor.insertImage(image);
+
     doc.print(&printer);
+
+
+
 
     emit created();
 

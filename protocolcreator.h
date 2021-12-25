@@ -37,6 +37,9 @@ private:
     QPixmap m_graph;
 
     QString convertTemplateToHtml(const QString& templateFilename);
+
+    void writeDataPart();
+    void writeImagePart();
 };
 
 #endif // PROTOCOLCREATOR_H

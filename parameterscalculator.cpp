@@ -92,7 +92,7 @@ void ParametersCalculator::analyzeSmokeData(int samplingFrequency)
 
         if (experimentLengthMinuteOrMore and samplesCountEnoughForMinute)
         {
-            double minuteSmokeDiff = smokeValue - m_experimentData[i - 60 * samplingFrequency].smokeValue;
+            double minuteSmokeDiff = smokeValue - m_experimentData[i - samplesInMinute].smokeValue;
 
             if (minuteSmokeDiff > maxMinuteSmokeDiff)
             {

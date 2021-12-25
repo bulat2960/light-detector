@@ -152,7 +152,7 @@ void MainWindow::createToolBar()
 
 void MainWindow::openProgramSettings()
 {
-    ProgramSettingsDialog dialog(m_chart->samplesAfterReachMaxSmokeToNotify(), this);
+    ProgramSettingsDialog dialog(m_chart->samplesAfterReachMaxSmokeToNotify() / samplingFrequency, this);
     int code = dialog.exec();
 
     if (code == QDialog::Rejected)
